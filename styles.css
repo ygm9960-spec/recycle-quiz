@@ -53,7 +53,7 @@ h1 { margin: 0; font-weight: 1000; letter-spacing: -.045em; line-height: 1.04; }
   display: grid; place-items: center; background: var(--yellow); font-size: 1.9rem; box-shadow: 3px 3px 0 rgba(0,0,0,.12);
 }
 .start-panel h1 { font-size: clamp(2.4rem, 11vw, 4.15rem); }
-.longpress-title { user-select: none; -webkit-user-select: none; }
+.teacher-trigger-title { user-select: none; -webkit-user-select: none; touch-action: manipulation; }
 .form-group { display: grid; gap: 7px; margin-top: 18px; }
 .form-label { font-size: .83rem; font-weight: 950; }
 .class-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }

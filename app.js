@@ -13,7 +13,8 @@
   let lastRenderedResult = null;
   let activeTeacherTab = "overview";
   let teacherAutoRefreshTimer = null;
-  let teacherLongPressTimer = null;
+  let teacherTitleTapCount = 0;
+  let teacherTitleTapResetTimer = null;
   let remoteQuestionSettings = {};
   let teacherDashboardCache = { attempts: [], questionSettings: {} };
   let teacherRefreshInFlight = false;
@@ -1079,29 +1080,42 @@
     }
   }
 
-  function setupTeacherLongPress() {
+  function setupTeacherTitleTap() {
     const title = $("startTitle");
-    const ms = CONFIG.teacher?.titleLongPressMs || 2200;
-    const start = e => {
-      if (e.type === "pointerdown" && e.pointerType === "mouse" && e.button !== 0) return;
-      clearTimeout(teacherLongPressTimer);
-      teacherLongPressTimer = setTimeout(() => {
-        haptic(35);
-        openTeacherLogin();
-      }, ms);
-    };
-    const cancel = () => {
-      clearTimeout(teacherLongPressTimer);
-      teacherLongPressTimer = null;
+    const requiredTaps = Math.max(2, Number(CONFIG.teacher?.titleTapCount || 5));
+    const resetMs = Math.max(700, Number(CONFIG.teacher?.titleTapResetMs || 1800));
+
+    const resetTapCount = () => {
+      teacherTitleTapCount = 0;
+      if (teacherTitleTapResetTimer) {
+        clearTimeout(teacherTitleTapResetTimer);
+        teacherTitleTapResetTimer = null;
+      }
     };
 
-    title.addEventListener("pointerdown", start);
-    title.addEventListener("pointerup", cancel);
-    title.addEventListener("pointercancel", cancel);
-    title.addEventListener("pointerleave", cancel);
+    const registerTap = () => {
+      teacherTitleTapCount += 1;
+
+      if (teacherTitleTapResetTimer) clearTimeout(teacherTitleTapResetTimer);
+      teacherTitleTapResetTimer = setTimeout(resetTapCount, resetMs);
+
+      if (teacherTitleTapCount >= requiredTaps) {
+        resetTapCount();
+        haptic(35);
+        openTeacherLogin();
+      }
+    };
+
+    // 스마트폰 탭과 PC 클릭을 모두 click 이벤트 하나로 통일합니다.
+    title.addEventListener("click", registerTap);
     title.addEventListener("contextmenu", e => e.preventDefault());
+
+    // 키보드 사용 시에도 Enter 5회로 같은 규칙을 적용합니다.
     title.addEventListener("keydown", e => {
-      if (e.key === "Enter" && e.shiftKey) openTeacherLogin();
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        registerTap();
+      }
     });
   }
 
@@ -1130,7 +1144,7 @@
     $("retestExitBtn").addEventListener("click", () => lastRenderedResult ? renderResult(lastRenderedResult) : showScreen("resultScreen"));
     $("retestDoneBtn").addEventListener("click", () => lastRenderedResult ? renderResult(lastRenderedResult) : showScreen("resultScreen"));
 
-    setupTeacherLongPress();
+    setupTeacherTitleTap();
     $("teacherLoginBack").addEventListener("click", () => showScreen("startScreen"));
     $("teacherLoginBtn").addEventListener("click", teacherLogin);
     $("teacherPin").addEventListener("keydown", e => { if (e.key === "Enter") teacherLogin(); });

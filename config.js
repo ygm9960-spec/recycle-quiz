@@ -10,7 +10,7 @@
  */
 window.APP_CONFIG = Object.freeze({
   appName: "올바른 분리배출 퀴즈",
-  version: "4.1.0",
+  version: "4.2.0",
 
   data: {
     dataMode: "sheet", // "sheet" | "local"
@@ -22,7 +22,8 @@ window.APP_CONFIG = Object.freeze({
   teacher: {
     // local 모드에서만 쓰는 테스트용 PIN입니다. 실제 sheet 모드에서는 서버 PIN만 사용합니다.
     localTestPin: "2468",
-    titleLongPressMs: 2200,
+    titleTapCount: 5,
+    titleTapResetMs: 1800,
     autoRefreshMs: 5000
   },
 
