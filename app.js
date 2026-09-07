@@ -117,7 +117,7 @@
   }
 
   function buildStudentKey(classId, studentNo) {
-    return `${classId}-${padNo(studentNo)}`;
+    return `C${classId}-${padNo(studentNo)}`;
   }
 
   function stepFromQuestion(q, stage) {

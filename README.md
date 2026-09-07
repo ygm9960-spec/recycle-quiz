@@ -68,3 +68,9 @@ PIN은 Apps Script의 Script Properties에 저장되어 학생이 보는 GitHub 
 - `Questions`: 문항 ON/OFF 설정
 
 별도로 열 제목이나 수식을 만들 필요가 없습니다.
+
+### V4.1 hotfix
+- Google Sheets가 `1-30` 같은 학생키를 날짜로 자동 변환해 발생하던 `Cannot read properties of null (reading 'row')` 오류 수정
+- 학생키를 `C1-30` 형식으로 변경
+- Students/Attempts 학생키 열을 일반 텍스트로 고정
+- 초기 테스트 기록 정리용 `resetTestRecordsFromEditor()` 추가

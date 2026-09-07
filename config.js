@@ -10,11 +10,11 @@
  */
 window.APP_CONFIG = Object.freeze({
   appName: "올바른 분리배출 퀴즈",
-  version: "4.0.0",
+  version: "4.1.0",
 
   data: {
     dataMode: "sheet", // "sheet" | "local"
-    appsScriptUrl: "https://script.google.com/macros/s/AKfycbzwo23RfdR2pyNLXtFg_stjc6XtEVOasa8earx8JUY7nzNhuybQ640yR5kwnEbooOUr/exec", // 예: https://script.google.com/macros/s/XXXXXXXX/exec
+    appsScriptUrl: "https://script.google.com/macros/s/AKfycbywK_Ou_eCJ5TQ8A1eKbv7VOKFwFBDAE3L8g3TrxBWQPnHgVj6bue_EpEnLq8nXx3Czrw/exec", // 예: https://script.google.com/macros/s/XXXXXXXX/exec
     requestTimeoutMs: 15000,
     apiVersion: "v1"
   },

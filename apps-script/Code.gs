@@ -1,5 +1,5 @@
 /**
- * 올바른 분리배출 퀴즈 V4 - Google Apps Script API
+ * 올바른 분리배출 퀴즈 V4.1 - Google Apps Script API
  * ------------------------------------------------------------
  * 권장 사용법
  * 1. 새 Google 스프레드시트 생성
@@ -93,7 +93,8 @@ function setupProject() {
   if (!ss) throw new Error('스프레드시트에서 연결된 Apps Script로 실행해 주세요.');
   PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', ss.getId());
   ensureProject_();
-  SpreadsheetApp.getUi().alert('설정 완료', 'Students / Attempts / Questions 시트가 준비되었습니다.\n이제 setTeacherPin()을 실행한 뒤 웹 앱으로 배포하세요.', SpreadsheetApp.getUi().ButtonSet.OK);
+  formatKeyColumnsAsPlainText_(ss);
+  SpreadsheetApp.getUi().alert('설정 완료', 'Students / Attempts / Questions 시트가 준비되었습니다.\nV4.1에서는 학생키가 날짜로 오인되지 않도록 보호됩니다.\n이제 setTeacherPin()을 실행한 뒤 웹 앱으로 배포하세요.', SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
 /**
@@ -137,7 +138,7 @@ function startSession_(payload) {
     const attemptSheet = ss.getSheetByName(SHEETS_.ATTEMPTS);
     const students = readObjects_(studentSheet);
     const attempts = readObjects_(attemptSheet);
-    const studentKey = classId + '-' + studentNo;
+    const studentKey = makeStudentKey_(classId, studentNo);
     const now = new Date().toISOString();
 
     let studentInfo = findObjectWithRow_(students, 'studentKey', studentKey);
@@ -149,8 +150,10 @@ function startSession_(payload) {
         firstSessionId: '', firstCompleted: false,
         createdAt: now, updatedAt: now
       };
-      appendObject_(studentSheet, STUDENT_HEADERS_, student);
-      studentInfo = findObjectWithRow_(readObjects_(studentSheet), 'studentKey', studentKey);
+      const newStudentRow = appendObject_(studentSheet, STUDENT_HEADERS_, student);
+      // append 직후 다시 읽어서 찾지 않습니다. 시트가 '1-30' 같은 값을 날짜로 자동 해석해도
+      // row가 null이 되는 문제를 피하기 위해 방금 추가한 행 번호를 그대로 사용합니다.
+      studentInfo = { obj: student, row: newStudentRow };
     } else {
       student.name = name;
       student.updatedAt = now;
@@ -165,7 +168,7 @@ function startSession_(payload) {
       }
     }
 
-    const studentAttempts = attempts.filter(a => a.studentKey === studentKey);
+    const studentAttempts = attempts.filter(a => String(a.studentKey) === studentKey);
     const isFirst = !toBool_(student.firstCompleted) && !student.firstSessionId;
 
     if (!proposedPlan.length) throw new Error('출제할 문제가 없습니다. 문제 관리 설정을 확인해 주세요.');
@@ -435,10 +438,15 @@ function findObjectWithRow_(objects, key, value) {
 }
 
 function appendObject_(sheet, headers, obj) {
-  sheet.appendRow(headers.map(h => normalizeCell_(obj[h])));
+  const row = Math.max(2, sheet.getLastRow() + 1);
+  prepareKeyCellAsText_(sheet, row);
+  sheet.getRange(row, 1, 1, headers.length)
+    .setValues([headers.map(h => normalizeCell_(obj[h]))]);
+  return row;
 }
 
 function updateObjectRow_(sheet, row, headers, obj) {
+  prepareKeyCellAsText_(sheet, row);
   sheet.getRange(row, 1, 1, headers.length).setValues([headers.map(h => normalizeCell_(obj[h]))]);
 }
 
@@ -526,6 +534,40 @@ function sanitizeAnswers_(answers) {
     seen[a.questionId] = true;
     return Number.isInteger(a.selectedOriginalIndex) && a.selectedOriginalIndex >= 0;
   });
+}
+
+/**
+ * 학생키에 문자 접두사를 붙여 Google Sheets가 '1-30'을 날짜(1월 30일)로
+ * 자동 변환하는 문제를 원천 차단합니다.
+ * 예: 1반 30번 -> C1-30
+ */
+function makeStudentKey_(classId, studentNo) {
+  return 'C' + String(classId) + '-' + padNo_(studentNo);
+}
+
+/** 학생키 열은 항상 일반 텍스트로 저장합니다. */
+function formatKeyColumnsAsPlainText_(ss) {
+  const students = ss.getSheetByName(SHEETS_.STUDENTS);
+  const attempts = ss.getSheetByName(SHEETS_.ATTEMPTS);
+  if (students) students.getRange('A:A').setNumberFormat('@');
+  if (attempts) attempts.getRange('B:B').setNumberFormat('@');
+}
+
+function prepareKeyCellAsText_(sheet, row) {
+  if (sheet.getName() === SHEETS_.STUDENTS) sheet.getRange(row, 1).setNumberFormat('@');
+  if (sheet.getName() === SHEETS_.ATTEMPTS) sheet.getRange(row, 2).setNumberFormat('@');
+}
+
+/**
+ * 초기 테스트 중 생긴 잘못된/중복 기록을 지우고 다시 테스트하고 싶을 때
+ * Apps Script 편집기에서 직접 1회 실행하세요. Questions와 PIN은 유지합니다.
+ */
+function resetTestRecordsFromEditor() {
+  const ss = getSpreadsheet_();
+  clearDataRows_(ss.getSheetByName(SHEETS_.STUDENTS));
+  clearDataRows_(ss.getSheetByName(SHEETS_.ATTEMPTS));
+  formatKeyColumnsAsPlainText_(ss);
+  SpreadsheetApp.getUi().alert('테스트 기록 초기화 완료', 'Students / Attempts의 데이터 행을 지웠습니다. Questions와 교사용 PIN은 유지됩니다.', SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
 function padNo_(value) {

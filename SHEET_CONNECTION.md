@@ -107,3 +107,13 @@ data: {
 `Code.gs`를 수정한 뒤에는 기존 배포를 편집하여 **새 버전으로 다시 배포**해야 변경 내용이 실제 `/exec` 주소에 반영됩니다.
 
 GitHub의 `config.js`는 같은 `/exec` 주소를 계속 사용할 수 있습니다.
+
+## V4.1 오류 수정 안내
+
+초기 V4에서 `studentKey`가 `1-30`처럼 저장될 경우 Google Sheets가 이를 날짜(1월 30일)로 자동 해석할 수 있었습니다. 그 결과 학생을 다시 찾지 못해 `Cannot read properties of null (reading 'row')` 오류가 발생할 수 있었습니다.
+
+V4.1에서는 학생키를 `C1-30` 형태로 저장하고, Students의 A열과 Attempts의 B열을 일반 텍스트 형식으로 고정합니다. 또한 새 학생을 추가한 직후 행 번호를 직접 사용해 null row 오류를 방지합니다.
+
+기존 테스트 중 중복 행이 생겼다면 Apps Script 편집기에서 `resetTestRecordsFromEditor()`를 1회 실행한 뒤 다시 테스트하세요. 이 함수는 Students / Attempts 기록만 지우며 Questions와 교사용 PIN은 유지합니다.
+
+코드를 교체한 뒤에는 반드시 `setupProject()`를 다시 1회 실행하고, 웹 앱 배포에서 **새 버전으로 배포**하세요. 기존 `/exec` URL은 보통 그대로 사용할 수 있습니다.
