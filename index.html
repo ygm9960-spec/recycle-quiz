@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <meta name="theme-color" content="#73e9a0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>올바른 분리배출 퀴즈</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <!-- 학생 시작 화면 -->
+    <section id="startScreen" class="screen active student-screen" aria-labelledby="startTitle">
+      <div class="panel start-panel">
+        <div class="start-icon" aria-hidden="true">♻</div>
+        <p class="eyebrow">중학교 도덕 · 생활 속 환경 실천</p>
+        <h1 id="startTitle" class="longpress-title" tabindex="0">올바른<br />분리배출 퀴즈</h1>
+        <p class="lead">20문제를 풀며 생활 속 분리배출 실력을 확인해 보세요.</p>
+
+        <div class="form-group">
+          <span class="form-label">① 반을 선택하세요</span>
+          <div class="class-picker" role="group" aria-label="반 선택">
+            <button type="button" class="class-btn" data-class="1">1반</button>
+            <button type="button" class="class-btn" data-class="2">2반</button>
+          </div>
+        </div>
+
+        <div class="student-grid">
+          <label class="form-group">
+            <span class="form-label">② 번호</span>
+            <input id="studentNo" type="number" min="1" max="99" inputmode="numeric" placeholder="예: 7" autocomplete="off" />
+          </label>
+          <label class="form-group">
+            <span class="form-label">③ 이름</span>
+            <input id="studentName" type="text" maxlength="10" placeholder="이름 입력" autocomplete="off" />
+          </label>
+        </div>
+
+        <button id="startBtn" class="primary-btn" type="button">퀴즈 시작</button>
+        <p id="startMessage" class="helper" aria-live="polite"></p>
+
+        <div class="rule-box">
+          <strong>🏆 공식 기록 규칙</strong>
+          <p><b>첫 도전</b>만 공식 기록입니다. 이후 도전은 연습 기록으로 저장되고 순위에는 반영되지 않습니다.</p>
+        </div>
+      </div>
+      <p class="version-note">V4 · Google Sheets 연동</p>
+    </section>
+
+    <!-- 학생 퀴즈 -->
+    <section id="quizScreen" class="screen student-screen" aria-labelledby="questionText">
+      <header class="quiz-topbar">
+        <div class="badge-row">
+          <span id="studentBadge" class="student-badge"></span>
+          <span id="attemptBadge" class="attempt-badge"></span>
+        </div>
+        <span id="progressText" class="progress-text">1 / 20</span>
+      </header>
+
+      <div class="progress-track" aria-hidden="true"><div id="progressBar" class="progress-bar"></div></div>
+      <div id="stageBanner" class="stage-banner" aria-live="polite"></div>
+      <div id="streakToast" class="streak-toast hidden" aria-live="polite"></div>
+
+      <section id="questionBubble" class="question-bubble">
+        <div class="question-meta">
+          <span id="questionNo">1번</span>
+          <span id="stageChip" class="stage-chip"></span>
+        </div>
+        <h2 id="questionText"></h2>
+      </section>
+
+      <div id="answerGrid" class="answer-grid" role="group" aria-label="선택지"></div>
+
+      <section id="feedbackCard" class="feedback-card hidden" aria-live="polite">
+        <div id="feedbackTitle" class="feedback-title"></div>
+        <div id="misconceptionBox" class="misconception-box hidden">
+          <strong>왜 헷갈렸을까?</strong>
+          <p id="misconceptionText"></p>
+        </div>
+        <p id="feedbackExplanation" class="feedback-explanation"></p>
+        <div id="memoryTip" class="memory-tip"></div>
+        <button id="nextBtn" class="primary-btn compact" type="button">다음 문제 →</button>
+      </section>
+    </section>
+
+    <!-- 학생 결과 -->
+    <section id="resultScreen" class="screen student-screen" aria-labelledby="resultTitle">
+      <div class="panel result-panel">
+        <p class="eyebrow">퀴즈 완료</p>
+        <h1 id="resultTitle">나의 분리배출 성적표</h1>
+        <div id="masteryBadge" class="mastery-badge"></div>
+        <div class="score-ring">
+          <strong id="scoreValue">0</strong><span>점</span>
+        </div>
+        <p id="correctValue" class="result-correct"></p>
+        <p id="recordNotice" class="record-notice"></p>
+        <p id="resultMessage" class="result-message"></p>
+
+        <h2 class="section-title">영역별 실력</h2>
+        <div id="categoryReport" class="category-report"></div>
+
+        <h2 class="section-title">난이도별 결과</h2>
+        <div id="difficultySummary" class="summary-grid"></div>
+
+        <div class="result-actions">
+          <button id="wrongRetestBtn" class="secondary-btn" type="button">오답 정복</button>
+          <button id="retryBtn" class="primary-btn" type="button">다시 도전</button>
+        </div>
+        <button id="homeBtn" class="text-btn" type="button">처음 화면으로</button>
+      </div>
+    </section>
+
+    <!-- 오답 미니 재시험 -->
+    <section id="retestScreen" class="screen student-screen" aria-labelledby="retestQuestionText">
+      <header class="quiz-topbar retest-topbar">
+        <div>
+          <p class="eyebrow">오답 정복</p>
+          <strong id="retestProgress">1 / 4</strong>
+        </div>
+        <button id="retestExitBtn" class="small-btn" type="button">결과로</button>
+      </header>
+      <div class="progress-track"><div id="retestProgressBar" class="progress-bar"></div></div>
+
+      <section id="retestQuestionBubble" class="question-bubble review-bubble">
+        <div class="question-meta"><span>다시 풀기</span><span class="stage-chip">연습</span></div>
+        <h2 id="retestQuestionText"></h2>
+      </section>
+      <div id="retestAnswerGrid" class="answer-grid"></div>
+      <section id="retestFeedbackCard" class="feedback-card hidden">
+        <div id="retestFeedbackTitle" class="feedback-title"></div>
+        <p id="retestFeedbackExplanation" class="feedback-explanation"></p>
+        <button id="retestNextBtn" class="primary-btn compact" type="button">다음 오답 →</button>
+      </section>
+      <section id="retestComplete" class="panel retest-complete hidden">
+        <div class="celebrate">🎉</div>
+        <h2>오답 정복 완료!</h2>
+        <p id="retestCompleteText"></p>
+        <p class="helper">이 결과는 공식 점수와 명예의 전당에 영향을 주지 않습니다.</p>
+        <button id="retestDoneBtn" class="primary-btn" type="button">결과 화면으로</button>
+      </section>
+    </section>
+
+    <!-- 교사용 로그인 -->
+    <section id="teacherLoginScreen" class="screen teacher-screen" aria-labelledby="teacherLoginTitle">
+      <div class="panel teacher-login-panel">
+        <button class="back-icon" id="teacherLoginBack" type="button" aria-label="학생 화면으로 돌아가기">←</button>
+        <p class="eyebrow">통합 교사용 메뉴</p>
+        <h1 id="teacherLoginTitle">기록 · 통계 · 문제 관리</h1>
+        <p class="lead">학생용 웹앱과 같은 주소에서 교사용 메뉴를 사용합니다.</p>
+        <label class="form-group">
+          <span class="form-label">교사용 PIN</span>
+          <input id="teacherPin" type="password" inputmode="numeric" maxlength="8" placeholder="PIN 입력" />
+        </label>
+        <button id="teacherLoginBtn" class="primary-btn" type="button">교사용 메뉴 열기</button>
+        <p id="teacherLoginMessage" class="helper" aria-live="polite"></p>
+        <div class="prototype-warning"><strong>교사용 PIN은 서버에서 검증됩니다.</strong><br />Apps Script의 <b>setTeacherPin()</b>에서 원하는 PIN을 설정한 뒤 사용하세요.</div>
+      </div>
+    </section>
+
+    <!-- 교사용 대시보드 -->
+    <section id="teacherScreen" class="screen teacher-screen" aria-labelledby="teacherTitle">
+      <header class="teacher-header">
+        <div>
+          <p class="eyebrow">올바른 분리배출 퀴즈</p>
+          <h1 id="teacherTitle">교사용 대시보드</h1>
+        </div>
+        <div class="teacher-header-actions">
+          <button id="teacherRefreshBtn" class="small-btn" type="button">↻ 새로고침</button>
+          <button id="teacherExitBtn" class="small-btn" type="button">학생 화면</button>
+        </div>
+      </header>
+
+      <div class="teacher-toolbar">
+        <label>반
+          <select id="classFilter">
+            <option value="all">전체</option>
+            <option value="1">1반</option>
+            <option value="2">2반</option>
+          </select>
+        </label>
+        <label>통계 기준
+          <select id="attemptScope">
+            <option value="first">첫 기록만</option>
+            <option value="all">연습 포함</option>
+          </select>
+        </label>
+        <button id="exportBtn" class="small-btn" type="button">CSV</button>
+      </div>
+
+      <nav class="tabbar" aria-label="교사용 통계 메뉴">
+        <button class="tab active" data-tab="overview" type="button">현황</button>
+        <button class="tab" data-tab="hall" type="button">명예의 전당</button>
+        <button class="tab" data-tab="questions" type="button">문항 분석</button>
+        <button class="tab" data-tab="category" type="button">영역 분석</button>
+        <button class="tab" data-tab="retry" type="button">재도전</button>
+        <button class="tab" data-tab="manage" type="button">문제 관리</button>
+      </nav>
+
+      <section id="tab-overview" class="tab-content active"></section>
+      <section id="tab-hall" class="tab-content"></section>
+      <section id="tab-questions" class="tab-content"></section>
+      <section id="tab-category" class="tab-content"></section>
+      <section id="tab-retry" class="tab-content"></section>
+      <section id="tab-manage" class="tab-content"></section>
+
+      <section class="danger-zone">
+        <strong>기록 관리</strong>
+        <p>Google Sheets의 학생·응시 기록을 초기화할 수 있습니다. 문제 ON/OFF 설정은 유지됩니다.</p>
+        <button id="clearBtn" class="danger-btn" type="button">학생 기록 전체 초기화</button>
+      </section>
+    </section>
+  </main>
+
+  <!-- 교사용 수업 피드백 크게 보기 -->
+  <div id="teacherFocusModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="focusQuestionTitle">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span class="eyebrow">수업 피드백 모드</span>
+        <button id="focusCloseBtn" class="back-icon" type="button" aria-label="닫기">×</button>
+      </div>
+      <h2 id="focusQuestionTitle"></h2>
+      <div id="focusQuestionMeta" class="focus-meta"></div>
+      <div id="focusOptions" class="focus-options"></div>
+      <div id="focusExplanation" class="focus-explanation"></div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="questions.js"></script>
+  <script src="sheet-bridge.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
